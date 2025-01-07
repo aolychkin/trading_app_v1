@@ -37,14 +37,16 @@ class Indicators(Base):
   high = Column(Float(), nullable=False)
   low = Column(Float(), nullable=False)
   close = Column(Float(), nullable=False)
-  p_DI9 = Column(Float(), nullable=False)
-  m_DI9 = Column(Float(), nullable=False)
+  ADX9 = Column(Float(), nullable=False)
+  ADX9_pos = Column(Float(), nullable=False)
+  ADX9_neg = Column(Float(), nullable=False)
   EMA24 = Column(Float(), nullable=False)
-  MACD10 = Column(Float(), nullable=False)
+  MACD10_signal = Column(Float(), nullable=False)
+  MACD12_24 = Column(Float(), nullable=False)
+  RSI9 = Column(Float(), nullable=False)
 
   max_volume = Column(Integer(), nullable=False, default=0)  # константа
-  volume_C = Column(Float(), nullable=False)
-  volume_P = Column(Float(), nullable=False)
+  volume = Column(Float(), nullable=False)
   md_volume = Column(Float(), nullable=False)  # константа
 
 

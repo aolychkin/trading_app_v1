@@ -1,14 +1,16 @@
 from datetime import datetime
 from tabulate import tabulate
+import logging
 
 import sqlite3
 import pandas as pd
 import numpy as np
 
 from sqlalchemy.orm import Session
-from ta.trend import ADXIndicator
+from ta.trend import ADXIndicator, EMAIndicator, MACD
+from ta.momentum import RSIIndicator
 
-from domain import models
+import internal.domain.models as models
 
 # Утренняя торговая сессия: 04:00 – 7:00 utc.
 s_morning = datetime(2024, 12, 2, 4, 00).strftime("%H:%M")
@@ -50,93 +52,39 @@ def w_s_min(candle_time):
     return -1
 
 
-# def w_dm(candle_c: models.Candles, candle_p: models.Candles):
-#   # расчет +-M
-#   p_m = candle_c.high - candle_p.high
-#   m_m = candle_p.low - candle_c.low
-
-#   # расчет +-DM
-#   p_dm = p_m if (p_m > m_m and p_m > 0) else 0
-#   m_dm = m_m if (m_m > p_m and m_m > 0) else 0
-
-#   tr = max(candle_c.high, candle_p.close) - min(candle_c.low, candle_p.close)
-
-#   return tr, p_dm, m_dm
-
-
-def w_all_ema():  # расчет EMA. Нужно будет в этой оболочке и вести запись в родительском файле
-  cnx = sqlite3.connect('./storage/sqlite/shares.db')
-  df = pd.read_sql_query("SELECT volume, high, low, close FROM candles", cnx)
-  # TODO: close context
-
-  # простой расчет volume
-  df["volume-1"] = df["volume"].shift(periods=1)
-  df["md_volume"] = df["volume"].diff(periods=1).fillna(0)/df["volume-1"]
-
-  # смещение close на 1 назад, чтобы использовать для расчета прошлых свечей
-  df["close-1"] = df["close"].shift(periods=1)
-  # расчет +-M
-  df["p_M"] = df['high'].diff().fillna(0)
-  df["m_M"] = df['low'].diff(
-      periods=1).apply(lambda x: x if x == 0 else x*-1).fillna(0)
-
-  # расчет TR
-  df["TR"] = np.max(
-      df[["high", "close-1"]].values, axis=1) - np.min(df[["low", "close-1"]].values, axis=1)
-
-  # расчет +-DM
-  df["p_DM"] = np.where(
-      (df['p_M'] > df['m_M']) & (df['p_M'] > 0), df['p_M'], 0)
-  df["m_DM"] = np.where(
-      (df['m_M'] > df['p_M']) & (df['m_M'] > 0), df['m_M'], 0)
-
-  # расчет +-DI
-  df["p_DI9"] = (df['p_DM']/df['TR']).ewm(
-      span=9, adjust=False, min_periods=9).mean().fillna(0)
-  df["m_DI9"] = (df['m_DM']/df['TR']).ewm(
-      span=9, adjust=False, min_periods=9).mean().fillna(0)
-
-  # расчет всяких EMA
-  df["EMA9"] = df['close'].ewm(
-      span=9, adjust=False, min_periods=9).mean().fillna(0)
-  df["EMA9_GAIN"] = df['close'].diff().clip(lower=0).ewm(
-      span=9, adjust=False, min_periods=9).mean().fillna(0)
-  df["EMA9_LOSS"] = df['close'].diff().clip(
-      upper=0).apply(lambda x: x if x == 0 else x*-1).ewm(
-      span=9, adjust=False, min_periods=9).mean().fillna(0)
-
-  df["EMA9_ABS_DI"] = (abs(df["p_DI9"] - df["m_DI9"]) / (df["p_DI9"] + df["m_DI9"])).ewm(
-      span=9, adjust=False, min_periods=9).mean().fillna(0)
-
-  df["EMA10"] = df['close'].ewm(
-      span=10, adjust=False, min_periods=10).mean().fillna(0)
-  df["EMA12"] = df['close'].ewm(
-      span=12, adjust=False, min_periods=12).mean().fillna(0)
-  df["EMA24"] = df['close'].ewm(
-      span=24, adjust=False, min_periods=24).mean().fillna(0)
-
-  # расчет MACD
-  df["MACD10"] = (df["EMA12"] - df["EMA24"]).ewm(
-      span=10, adjust=False, min_periods=34).mean().fillna(0)
-
-  df.index += 1
-
-  # print(df.loc[52]["MACD10"])
-  print(tabulate(df.loc[50:70], headers='keys', tablefmt='psql'))
-
-  return round(np.quantile(df["volume"].values, 0.9999), 4), df["md_volume"].quantile(0.999), df
-
-
-def test_ta_lib():
+def ta_ind():
   cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
   df = pd.read_sql_query(
       "SELECT open, high, low, close, volume FROM candles", cnx)
+  df["md_volume"] = df["volume"].diff(
+      periods=1).fillna(0)/df["volume"].shift(periods=1)
 
   ta_ADX = ADXIndicator(
-      high=df["high"], low=df["low"], close=df["close"], window=9)
+      high=df["high"], low=df["low"], close=df["close"], window=9, fillna=True)
+  print("Расчет ADX9 успешно завершен")
 
-  df["ADX"] = ta_ADX.adx()
-  df["ADX_pos"] = ta_ADX.adx_pos()
-  df["ADX_neg"] = ta_ADX.adx_neg()
+  ta_MACD = MACD(
+      close=df["close"], window_fast=12, window_slow=24, window_sign=10, fillna=True)
+  print("Расчет MACD10 успешно завершен")
 
-  print(tabulate(df.loc[50:70], headers='keys', tablefmt='psql'))
+  df["ADX9"] = ta_ADX.adx()
+  df["ADX9_pos"] = ta_ADX.adx_pos()
+  df["ADX9_neg"] = ta_ADX.adx_neg()
+  print("ADX сохранен в df")
+
+  df["EMA24"] = EMAIndicator(
+      close=df["close"], window=24, fillna=True).ema_indicator()
+  print("EMA24 сохранен в df")
+
+  df["MACD10_signal"] = ta_MACD.macd_signal()
+  df["MACD12_24"] = ta_MACD.macd()
+  print("MACD сохранен в df")
+
+  df["RSI9"] = RSIIndicator(close=df["close"], window=9, fillna=True).rsi()
+  print("RSI сохранен в df")
+
+  df.index += 1  # синхранизируем с id бд
+
+  print(tabulate(df.loc[235765:235780], headers='keys', tablefmt='psql'))
+
+  return round(np.quantile(df["volume"].values, 0.9999), 4), df["md_volume"].quantile(0.999), df
