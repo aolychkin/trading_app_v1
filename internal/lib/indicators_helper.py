@@ -1,16 +1,13 @@
 from datetime import datetime
 from tabulate import tabulate
-import logging
 
 import sqlite3
 import pandas as pd
 import numpy as np
 
-from sqlalchemy.orm import Session
 from ta.trend import ADXIndicator, EMAIndicator, MACD
 from ta.momentum import RSIIndicator
 
-import internal.domain.models as models
 
 # Утренняя торговая сессия: 04:00 – 7:00 utc.
 s_morning = datetime(2024, 12, 2, 4, 00).strftime("%H:%M")
@@ -18,7 +15,8 @@ f_morning = datetime(2024, 12, 2, 7, 00).strftime("%H:%M")
 
 # Основная торговая сессия: 7:00 – 16:00 utc.
 s_main = datetime(2024, 12, 2, 7, 00).strftime("%H:%M")
-f_main = datetime(2024, 12, 2, 16, 00).strftime("%H:%M")
+f_main = datetime(2024, 12, 2, 15, 50).strftime("%H:%M")
+# TODO: понять, что делать с последними 10 минутами графика, которые я могу предсказать, но не могу использовать
 
 # Дополнительная торговая сессия: 16:00 – 20:50 utc.
 s_evening = datetime(2024, 12, 2, 16, 00).strftime("%H:%M")
@@ -84,7 +82,6 @@ def ta_ind():
   print("RSI сохранен в df")
 
   df.index += 1  # синхранизируем с id бд
-
   print(tabulate(df.loc[235765:235780], headers='keys', tablefmt='psql'))
 
   return round(np.quantile(df["volume"].values, 0.9999), 4), df["md_volume"].quantile(0.999), df

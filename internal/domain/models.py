@@ -21,6 +21,7 @@ class Candles(Base):
   is_complete = Column(Boolean(), default=0, nullable=False)
   indicator = relationship('Indicators', backref='candle', uselist=False)
   param = relationship('Params', backref='candle', uselist=False)
+  prediction = relationship('Predictions', backref='candle', uselist=False)
 
 
 class Indicators(Base):
@@ -75,6 +76,15 @@ class Params(Base):
 
   s_vol_C = Column(Float(), nullable=False)
   d_vol_CP = Column(Float(), nullable=False)
+
+
+class Predictions(Base):
+  __tablename__ = 'predictions'
+  id = Column(Integer(), primary_key=True)
+  candle_id = Column(Integer(), ForeignKey('candles.id'))
+
+  high_10min = Column(Integer(), nullable=False)
+
 
 # __table_args__ = (
 #         ForeignKeyConstraint(['user_id'], ['users.id']),
