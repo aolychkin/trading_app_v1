@@ -46,12 +46,14 @@ if __name__ == '__main__':
   # shelp.strategy(
   #     df_model, accuracy=0.91, stop_loss=0.004, take_profit=0.003)  # +1
 
+# ____
   shelp.strategy(
       df_model, accuracy=0.9, stop_loss=0.003, take_profit=0.0025)
-  shelp.strategy(
-      df_model, accuracy=0.9, stop_loss=0.002, take_profit=0.002)  # +1
-  shelp.strategy(
-      df_model, accuracy=0.9, stop_loss=0.002, take_profit=0.0025)  # +1
+  # shelp.strategy(
+  #     df_model, accuracy=0.9, stop_loss=0.002, take_profit=0.002)  # +1
+  # shelp.strategy(
+  #     df_model, accuracy=0.9, stop_loss=0.004, take_profit=0.003)  # +1
+# ____
 
   # shelp.strategy(
   #     df_model, accuracy=0.9, stop_loss=0.002, take_profit=0.003)

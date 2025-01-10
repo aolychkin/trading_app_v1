@@ -27,7 +27,9 @@ import internal.domain.models as models
 def get_data():
   cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
   df = pd.read_sql_query(
-      "SELECT * from candles where time >= '2024-12-19 07:01:00.000' and time <= '2024-12-19 15:30:00.00'", cnx)
+      "SELECT * from candles where time >= '2024-12-20 07:01:00.000' and time <= '2024-12-20 15:30:00.00'", cnx)
+  # "SELECT * from candles where time >= '2024-12-20 07:01:00.000' and time <= '2024-12-20 15:30:00.00'", cnx)
+  # "SELECT * from candles where time >= '2024-12-18 07:01:00.000' and time <= '2024-12-18 15:30:00.00'", cnx)
 
   max_id = df["id"].max()
   min_id = df["id"].min()
@@ -64,54 +66,105 @@ def fit_data():
   return scaler
 
 
-def strategy(data, accuracy, stop_loss, take_profit):
-  start_balance = 700
-  balance_df = pd.DataFrame(columns=['transaction'])
+def strategy(data, accuracy, stop_loss, take_profit, debug=True):
   indx = 0
+  profile = pd.DataFrame()
+  transaction_id = 0
+  profile["id"] = [transaction_id]
+  profile["transaction"] = [700]
+  profile["balance"] = [700]
+  profile["candle_id"] = [0]
+  profile["price"] = [700]
+  profile["is_closed"] = [1]
+  profile["cause"] = ["money"]
+  profile["accuracy"] = [0.00]
+  profile["result"] = [""]
+
   m_count = 0
   p_count = 0
   count = 0
-  balance_df["transaction"] = [start_balance]
-  for index, row in data.iterrows():
-    # fig.add_trace(go.Scatter(
-    #     x=[row["time"]],
-    #     y=[df.loc[index]['close']],
-    #     mode='markers',
-    #     name='markers')
-    # )
-    flag = 0
-    if row["p_0.5"] >= accuracy:
-      balance_df.loc[len(balance_df)] = -data.loc[index]['close'] * (1+0.0004)
-      count += 1
-      for i in range(10):
-        if (data.loc[index+i+1]['high'] / data.loc[index]['close'] - 1) >= take_profit:
-          balance_df.loc[len(balance_df)] = (
-              data.loc[index+i+1]['high'] * (1-0.0004))
-          flag = 1
-          p_count += 1
-          break
-        elif (data.loc[index+i+1]['low'] / data.loc[index]['close'] - 1) <= -stop_loss:
-          balance_df.loc[len(balance_df)] = (
-              data.loc[index+i+1]['low'] * (1-0.0004))
-          flag = 1
-          m_count += 1
-          break
-      if flag == 0:
-        balance_df.loc[len(balance_df)] = (
-            data.loc[index+1+9]['low'] * (1-0.0004))
-        m_count += 1
 
-  balance_df.to_csv('out.csv', index=False)
+  # TODO: Если больше N открытых сделок - больше не открываю
+  # TODO: Подкрепить показателями теми же самыми за период в 10 минут для каждой свечи минутной внутри (более длинный тренд)
+  # TODO: Обучение норм, нужно работать с данными
+
+  for index, row in tqdm(data.iterrows()):
+    # Сигнал на покупку акции
+    if (row["p_0.5"] >= accuracy) and (profile[profile["is_closed"] == 0]["is_closed"].count() < 4):
+      transaction_id += 1
+      buy = round(row['close'] * (1+0.0004), 2)  # TODO: увеличить точность. Price без комиссии
+      balance = round(profile.loc[indx, "balance"], 2)
+      indx += 1
+      profile.loc[indx, "id"] = transaction_id
+      profile.loc[indx, "transaction"] = -buy
+      profile.loc[indx, "balance"] = round(balance-buy, 2)
+      profile.loc[indx, "candle_id"] = row["id"]
+      profile.loc[indx, "price"] = buy
+      profile.loc[indx, "is_closed"] = 0
+      profile.loc[indx, "accuracy"] = row["p_0.5"]
+
+    for index, p_row in profile.iterrows():
+      if (0 < row["id"] - p_row["candle_id"] <= 10) and (p_row["is_closed"] == 0):
+        if (row["high"]/p_row["price"] - 1 >= take_profit):
+          indx += 1
+          sell = round(row['high'] * (1-0.0004), 2)
+          profile.loc[indx, "id"] = p_row["id"]
+          profile.loc[indx, "transaction"] = sell
+          profile.loc[indx, "balance"] = round(profile.loc[indx-1, "balance"]+sell, 2)
+          profile.loc[indx, "candle_id"] = row["id"]
+          profile.loc[indx, "price"] = sell
+          profile.loc[indx, "is_closed"] = 1
+          profile.loc[index, "is_closed"] = 1
+          profile.loc[indx, "cause"] = "take_profit"
+          profile.loc[index, "cause"] = "take_profit"
+          profile.loc[index, "result"] = "+"
+        elif (row["low"]/p_row["price"] - 1 <= -stop_loss):
+          indx += 1
+          sell = round(row['low'] * (1+0.0004), 2)
+          profile.loc[indx, "id"] = p_row["id"]
+          profile.loc[indx, "transaction"] = sell
+          profile.loc[indx, "balance"] = round(profile.loc[indx-1, "balance"]+sell, 2)
+          profile.loc[indx, "candle_id"] = row["id"]
+          profile.loc[indx, "price"] = sell
+          profile.loc[indx, "is_closed"] = 1
+          profile.loc[index, "is_closed"] = 1
+          profile.loc[indx, "cause"] = "stop_loss"
+          profile.loc[index, "cause"] = "stop_loss"
+          profile.loc[index, "result"] = "-"
+      elif (row["id"] - p_row["candle_id"] > 10) and (p_row["is_closed"] == 0):
+        indx += 1
+        sell = round(row['low'] * (1+0.0004), 2)
+        profile.loc[indx, "id"] = p_row["id"]
+        profile.loc[indx, "transaction"] = sell
+        profile.loc[indx, "balance"] = round(profile.loc[indx-1, "balance"]+sell, 2)
+        profile.loc[indx, "candle_id"] = row["id"]
+        profile.loc[indx, "price"] = sell
+        profile.loc[indx, "is_closed"] = 1
+        profile.loc[index, "is_closed"] = 1
+        profile.loc[indx, "cause"] = "expired"
+        profile.loc[index, "cause"] = "expired"
+        if (profile.loc[indx, "price"] / profile.loc[index, "price"] - 1 > 0):
+          profile.loc[index, "result"] = "+"
+        elif (profile.loc[indx, "price"] / profile.loc[index, "price"] - 1 == 0):
+          profile.loc[index, "result"] = "="
+        else:
+          profile.loc[index, "result"] = "-"
+
+  delta_money = round((profile.tail(1)["balance"].values[0] / profile.head(1)["balance"].values[0] - 1)*100, 2)
+  stop_order = profile["cause"].value_counts().values
+  profit = profile["cause"].value_counts().values
   print(f"\
-    Параметры: acc={accuracy}, sl={stop_loss}, tp={take_profit} \
-    Итоговый баланс: {round(balance_df['transaction'].sum(), 2)} \n \
-    Рост баланса: +{round((balance_df['transaction'].sum()/start_balance-1)*100, 2)}% \n \
-    Всего сделок: {count} \n \
-    Соотношение сделок (+/-): {round(p_count/m_count, 2)} \n \
-    Сделок: в плюс: {p_count} \t в минус: {m_count} \n")
+    Параметры: acc={accuracy}, sl={stop_loss}, tp={take_profit} \n \
+    Итоговый баланс: {profile.tail(1)["balance"].values[0]} \n \
+    Рост баланса: {"+" if delta_money > 0 else ""}{delta_money}% \n \
+    Всего сделок: {np.floor(profile[profile["is_closed"] == 1]["is_closed"].count() / 2)} \n \
+    Соотношение сделок (+/-): {0} \n \
+    take_profit: {stop_order[3]}  | |  stop_loss: {stop_order[2]}  | |  expired:{stop_order[0]}\n")
 
-  # except:
-  #   balance_df.loc[len(balance_df)] = -(
-  #       balance_df.loc[len(balance_df)-1]['transaction'] * 0.998)
-  #   m_count += 1
-  #   print("WARN")
+  if (debug):
+    profile.to_csv('out.csv', index=False)
+    print(tabulate(profile.head(10), headers='keys', tablefmt='psql'))
+    print(profile["is_closed"].value_counts())
+    print(profile["result"].value_counts().sort_index())
+    print(profile["cause"].value_counts().sort_index())
+    print(profile["balance"].min())
