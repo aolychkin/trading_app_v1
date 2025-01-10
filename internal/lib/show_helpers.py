@@ -27,7 +27,7 @@ import internal.domain.models as models
 def get_data():
   cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
   df = pd.read_sql_query(
-      "SELECT * from candles where time >= '2024-12-20 07:01:00.000' and time <= '2024-12-20 15:30:00.00'", cnx)
+      "SELECT * from candles where time >= '2024-09-20 07:01:00.000' and time <= '2024-09-20 15:30:00.00'", cnx)
   # "SELECT * from candles where time >= '2024-12-20 07:01:00.000' and time <= '2024-12-20 15:30:00.00'", cnx)
   # "SELECT * from candles where time >= '2024-12-18 07:01:00.000' and time <= '2024-12-18 15:30:00.00'", cnx)
 
@@ -66,7 +66,7 @@ def fit_data():
   return scaler
 
 
-def strategy(data, accuracy, stop_loss, take_profit, debug=True):
+def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
   indx = 0
   profile = pd.DataFrame()
   transaction_id = 0
@@ -104,7 +104,7 @@ def strategy(data, accuracy, stop_loss, take_profit, debug=True):
       profile.loc[indx, "accuracy"] = row["p_0.5"]
 
     for index, p_row in profile.iterrows():
-      if (0 < row["id"] - p_row["candle_id"] <= 10) and (p_row["is_closed"] == 0):
+      if (0 < row["id"] - p_row["candle_id"] <= wait) and (p_row["is_closed"] == 0):
         if (row["high"]/p_row["price"] - 1 >= take_profit):
           indx += 1
           sell = round(row['high'] * (1-0.0004), 2)
@@ -151,15 +151,15 @@ def strategy(data, accuracy, stop_loss, take_profit, debug=True):
           profile.loc[index, "result"] = "-"
 
   delta_money = round((profile.tail(1)["balance"].values[0] / profile.head(1)["balance"].values[0] - 1)*100, 2)
-  stop_order = profile["cause"].value_counts().values
-  profit = profile["cause"].value_counts().values
+  stop_order = profile["cause"].value_counts().sort_index().values
+  profit = profile["result"].value_counts().sort_index().values
   print(f"\
     Параметры: acc={accuracy}, sl={stop_loss}, tp={take_profit} \n \
     Итоговый баланс: {profile.tail(1)["balance"].values[0]} \n \
     Рост баланса: {"+" if delta_money > 0 else ""}{delta_money}% \n \
     Всего сделок: {np.floor(profile[profile["is_closed"] == 1]["is_closed"].count() / 2)} \n \
-    Соотношение сделок (+/-): {0} \n \
-    take_profit: {stop_order[3]}  | |  stop_loss: {stop_order[2]}  | |  expired:{stop_order[0]}\n")
+    Соотношение сделок (+/-): {round(profit[1]/profit[2], 2)} \n \
+    take_profit: {stop_order[3]/2}  | |  stop_loss: {stop_order[2]/2}  | |  expired: {stop_order[0]/2}\n")
 
   if (debug):
     profile.to_csv('out.csv', index=False)

@@ -21,7 +21,7 @@ if __name__ == '__main__':
   for index, x in enumerate(X):
     df_model.loc[index, ["minus", "p_0.2", "p_0.5"]] = (
         model.predict_proba(x.reshape(1, -1))).ravel()
-  print(tabulate(df_model.head(), headers='keys', tablefmt='psql'))
+  # print(tabulate(df_model.head(), headers='keys', tablefmt='psql'))
 
   # # TODO: нормализовать прямо в бд
 
@@ -37,23 +37,11 @@ if __name__ == '__main__':
   #     name='markers')
   # )
 
-  # shelp.strategy(
-  #     df_model, accuracy=0.9, stop_loss=0.004, take_profit=0.003)  # +1
-  # shelp.strategy(
-  #     df_model, accuracy=0.9, stop_loss=0.005, take_profit=0.005)  # +1
-  # shelp.strategy(
-  #     df_model, accuracy=0.91, stop_loss=0.005, take_profit=0.005)
-  # shelp.strategy(
-  #     df_model, accuracy=0.91, stop_loss=0.004, take_profit=0.003)  # +1
+# ____ 12-20/18/16 , 09-20/18/16
+  shelp.strategy(df_model, accuracy=0.9, stop_loss=0.004, take_profit=0.003)  # 1 1 1
+  shelp.strategy(df_model, accuracy=0.9, stop_loss=0.004, take_profit=0.002)  # 1 1 1 1 1 1 1 1
+  shelp.strategy(df_model, accuracy=0.91, stop_loss=0.004, take_profit=0.003)  # 1 1! 1
+  shelp.strategy(df_model, accuracy=0.9, stop_loss=0.003, take_profit=0.0025)  # 1 1 1 1 1!
+  shelp.strategy(df_model, accuracy=0.9, stop_loss=0.002, take_profit=0.002)  # 1 1 1
 
 # ____
-  shelp.strategy(
-      df_model, accuracy=0.9, stop_loss=0.003, take_profit=0.0025)
-  # shelp.strategy(
-  #     df_model, accuracy=0.9, stop_loss=0.002, take_profit=0.002)  # +1
-  # shelp.strategy(
-  #     df_model, accuracy=0.9, stop_loss=0.004, take_profit=0.003)  # +1
-# ____
-
-  # shelp.strategy(
-  #     df_model, accuracy=0.9, stop_loss=0.002, take_profit=0.003)
