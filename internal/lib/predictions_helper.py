@@ -10,9 +10,7 @@ from ta.momentum import RSIIndicator
 
 
 def condition(x):
-  if 0.01 < x <= 1:
-    return 3
-  elif 0.005 < x <= 0.01:
+  if 0.005 < x <= 1:
     return 2
   elif 0.002 <= x <= 0.005:
     return 1

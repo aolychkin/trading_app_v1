@@ -15,22 +15,54 @@ f_morning = datetime(2024, 12, 2, 7, 00).strftime("%H:%M")
 
 # Основная торговая сессия: 7:00 – 16:00 utc.
 s_main = datetime(2024, 12, 2, 7, 00).strftime("%H:%M")
-f_main = datetime(2024, 12, 2, 15, 50).strftime("%H:%M")
+f_main = datetime(2024, 12, 2, 15, 30).strftime("%H:%M")
 # TODO: понять, что делать с последними 10 минутами графика, которые я могу предсказать, но не могу использовать
+# В 15:40 начинается снятие заявок
+# 1–2 января, 7 января, 23 февраля, 8 марта, 1 мая, 9 мая, 12 июня, 4 ноября 2024 года
+s_h1 = datetime(2024, 1, 1, 2, 00)
+f_h1 = datetime(2024, 1, 3, 23, 59)
+
+s_h2 = datetime(2024, 1, 6, 2, 00)
+f_h2 = datetime(2024, 1, 8, 23, 59)
+
+s_h3 = datetime(2024, 2, 22, 2, 00)
+f_h3 = datetime(2024, 3, 24, 23, 59)
+
+s_h4 = datetime(2024, 3, 7, 2, 00)
+f_h4 = datetime(2024, 3, 9, 23, 59)
+
+s_h5 = datetime(2024, 5, 1, 2, 00)
+f_h5 = datetime(2024, 5, 2, 23, 59)
+
+s_h6 = datetime(2024, 5, 8, 2, 00)
+f_h6 = datetime(2024, 5, 10, 23, 59)
+
+s_h7 = datetime(2024, 6, 11, 2, 00)
+f_h7 = datetime(2024, 6, 13, 23, 59)
+
+s_h8 = datetime(2024, 11, 3, 2, 00)
+f_h8 = datetime(2024, 11, 5, 23, 59)
 
 # Дополнительная торговая сессия: 16:00 – 20:50 utc.
-s_evening = datetime(2024, 12, 2, 16, 00).strftime("%H:%M")
-f_evening = datetime(2024, 12, 2, 20, 50).strftime("%H:%M")
+s_evening = datetime(2024, 12, 1, 16, 00).strftime("%H:%M")
+f_evening = datetime(2024, 12, 3, 20, 50).strftime("%H:%M")
 
 
-def w_session(candle_time):
+def w_session(candle_time, day):
+  weekday = day.isoweekday()
   # В какую торговую сессию торгуется свеча (what)
-  if (s_morning < candle_time <= f_morning):
+  if (weekday == 7) or (weekday == 6):
+    return 3
+  elif (s_h1 <= day <= f_h1) or (s_h2 <= day <= f_h2) or (s_h3 <= day <= f_h3) or (s_h4 <= day <= f_h4):
+    return 3
+  elif (s_h5 <= day <= f_h5) or (s_h6 <= day <= f_h6) or (s_h7 <= day <= f_h7) or (s_h8 <= day <= f_h8):
+    return 3
+  elif (s_morning < candle_time <= f_morning):
     return 0
-  elif (s_main < candle_time <= f_main):
-    return 1
   elif (s_evening < candle_time <= f_evening):
     return 2
+  elif (s_main < candle_time <= f_main):
+    return 1
   else:
     return -1
 

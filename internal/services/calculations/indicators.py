@@ -25,7 +25,8 @@ if __name__ == '__main__':
 
           # индикторы группы: time
           weekday=candle.time.isoweekday(),
-          session=ihelp.w_session(candle.time.strftime("%H:%M")),
+          session=ihelp.w_session(
+              candle.time.strftime("%H:%M"), candle.time),
           session_len=540,
           s_min=ihelp.w_s_min(candle.time.strftime("%H:%M")),
 
