@@ -27,14 +27,14 @@ if __name__ == '__main__':
   # Создание и обучение модели SVC
   model = mlrhelp.create_model_SVC("fast", X_train, y_train)
 
-  # # Создание и обучение модели дерева решений
-  # model = mlrhelp.create_model_TREE("", X_train, y_train)
+  # Создание и обучение модели дерева решений
+#   model = mlrhelp.create_model_TREE("", X_train, y_train)
 
   # Оценка производительности модели
   mlrhelp.model_score(model, X_test, y_test)
 
   # Сохранение модели
-  joblib.dump(model, "./model/model_10m_v11.pkl")  # 0.58 # 0.45
+  joblib.dump(model, "./model_v2/model_1.pkl")  # 0.58 # 0.45
 
 # ____ DRAFT ____
 # Загрузка модели потом

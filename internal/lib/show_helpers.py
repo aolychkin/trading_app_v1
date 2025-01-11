@@ -25,30 +25,33 @@ import internal.domain.models as models
 
 
 def get_data():
+  np.seterr(divide='ignore', invalid='ignore')
   cnx = sqlite3.connect('./storage/sqlite/shares.db')
   df = pd.read_sql_query(
-      "SELECT * from candles where time >= '2024-12-20 07:01:00.000' and time <= '2024-12-20 15:30:00.00'", cnx)
+      "SELECT * from candles where time >= '2024-12-16 07:01:00.000' and time <= '2024-12-16 15:30:00.00'", cnx)
 
   max_id = df["id"].max()
   min_id = df["id"].min()
 
   data = pd.read_sql_query(
-      "SELECT * from params where candle_id >= (?) and candle_id <= (?)", cnx, params=(str(min_id), str(max_id)))
+      "SELECT * from params_normal where candle_id >= (?) and candle_id <= (?)", cnx, params=(str(min_id), str(max_id)))
 
   data.drop(columns=["id", "candle_id"], inplace=True)
+  # print("NA SUMM")
+  # print(data.isna().sum())
 
-  # Fit data
-  scaler = fit_data()
+  # # Fit data
+  # scaler = fit_data()
 
   # Подготовка данных
   X = data.to_numpy()
-  X_prod = scaler.transform(X)
+  # X_prod = scaler.transform(X)
 
   # print(tabulate(data.head(), headers='keys', tablefmt='psql'))
   # print(max_id, min_id)
 
   print("\n[УСПЕШНО] Данные успешно получены")
-  return df, X_prod
+  return df, X
 
 
 def fit_data():
@@ -65,6 +68,7 @@ def fit_data():
 
 
 def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
+  np.seterr(divide='ignore', invalid='ignore')
   indx = 0
   profile = pd.DataFrame()
   transaction_id = 0
@@ -87,7 +91,7 @@ def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
 
   for index, row in tqdm(data.iterrows()):
     # Сигнал на покупку акции
-    if (row["target"] >= accuracy) and (profile[profile["is_closed"] == 0]["is_closed"].count() < 4):
+    if (row["target"] >= accuracy) and (profile[profile["is_closed"] == 0]["is_closed"].count() < 5):
       transaction_id += 1
       buy = round(row['close'] * (1+0.0004), 2)  # TODO: увеличить точность. Price без комиссии
       balance = round(profile.loc[indx, "balance"], 2)
@@ -128,7 +132,7 @@ def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
           profile.loc[indx, "cause"] = "stop_loss"
           profile.loc[index, "cause"] = "stop_loss"
           profile.loc[index, "result"] = "-"
-      elif (row["id"] - p_row["candle_id"] > 10) and (p_row["is_closed"] == 0):
+      elif (row["id"] - p_row["candle_id"] > wait) and (p_row["is_closed"] == 0):
         indx += 1
         sell = round(row['low'] * (1+0.0004), 2)
         profile.loc[indx, "id"] = p_row["id"]
@@ -147,19 +151,61 @@ def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
         else:
           profile.loc[index, "result"] = "-"
 
-  delta_money = round((profile.tail(1)["balance"].values[0] / profile.head(1)["balance"].values[0] - 1)*100, 2)
-  stop_order = profile["cause"].value_counts().sort_index().values
-  profit = profile["result"].value_counts().sort_index().values
-  print(f"\
-    Параметры: acc={accuracy}, sl={stop_loss}, tp={take_profit} \n \
-    Итоговый баланс: {profile.tail(1)["balance"].values[0]} \n \
-    Рост баланса: {"+" if delta_money > 0 else ""}{delta_money}% \n \
-    Всего сделок: {np.floor(profile[profile["is_closed"] == 1]["is_closed"].count() / 2)} \n \
-    Соотношение сделок (+/-): {round(profit[1]/profit[2], 2)} \n \
-    take_profit: {stop_order[3]/2}  | |  stop_loss: {stop_order[2]/2}  | |  expired: {stop_order[0]/2}\n")
+  # delta_money = round((profile.tail(1)["balance"].values[0] / profile.head(1)["balance"].values[0] - 1)*100, 2)
+  delta_money = round(((profile.tail(1)["balance"].values[0] - profile["balance"].min())/(profile.head(1)["balance"].values[0] - profile["balance"].min())-1)*100, 2)
+  stop_order = profile["cause"].value_counts().sort_index()
+  profit = profile["result"].value_counts().sort_index()
+  print(profile["balance"].min())
+  try:
+    print(f"\
+      Параметры: acc={accuracy}, sl={stop_loss}, tp={take_profit} \n \
+      Итоговый баланс: {profile.tail(1)["balance"].values[0]} \n \
+      Обернуто в сделках: {round((profile.head(1)["balance"].values[0] - profile["balance"].min()), 2)} \n \
+      Рост обернутого: {"+" if delta_money > 0 else ""}{delta_money}% \n \
+      Всего сделок: {np.floor(profile[profile["is_closed"] == 1]["is_closed"].count() / 2)} \n \
+      Соотношение сделок (+/-): {round(profit["+"]/profit["-"], 2)} \n \
+      take_profit: {stop_order["take_profit"]/2}  | |  stop_loss: {stop_order["stop_loss"]/2}  | |  expired: {stop_order["expired"]/2}\n")
+  except:
+    try:
+      print(f"\
+        Параметры: acc={accuracy}, sl={stop_loss}, tp={take_profit} \n \
+        Итоговый баланс: {profile.tail(1)["balance"].values[0]} \n \
+        Обернуто в сделках: {round((profile.head(1)["balance"].values[0] - profile["balance"].min()), 2)} \n \
+        Рост обернутого: {"+" if delta_money > 0 else ""}{delta_money}% \n \
+        Всего сделок: {np.floor(profile[profile["is_closed"] == 1]["is_closed"].count() / 2)} \n \
+        Соотношение сделок (+/-): {round(profit["+"]/profit["-"], 2)} \n \
+        take_profit: {stop_order["take_profit"]/2}  | |  stop_loss: {stop_order["stop_loss"]/2}  | |  expired: {0}\n")
+    except:
+      try:
+        print(f"\
+          Параметры: acc={accuracy}, sl={stop_loss}, tp={take_profit} \n \
+          Итоговый баланс: {profile.tail(1)["balance"].values[0]} \n \
+          Обернуто в сделках: {round((profile.head(1)["balance"].values[0] - profile["balance"].min()), 2)} \n \
+          Рост обернутого: {"+" if delta_money > 0 else ""}{delta_money}% \n \
+          Всего сделок: {np.floor(profile[profile["is_closed"] == 1]["is_closed"].count() / 2)} \n \
+          Соотношение сделок (+/-): {round(profit["+"]/profit["-"], 2)} \n \
+          take_profit: {0}  | |  stop_loss: {stop_order["stop_loss"]/2}  | |  expired: {stop_order["expired"]/2}\n")
+      except:
+        try:
+          print(f"\
+          Параметры: acc={accuracy}, sl={stop_loss}, tp={take_profit} \n \
+          Итоговый баланс: {profile.tail(1)["balance"].values[0]} \n \
+          Обернуто в сделках: {round((profile.head(1)["balance"].values[0] - profile["balance"].min()), 2)} \n \
+          Рост обернутого: {"+" if delta_money > 0 else ""}{delta_money}% \n \
+          Всего сделок: {np.floor(profile[profile["is_closed"] == 1]["is_closed"].count() / 2)} \n \
+          Соотношение сделок (+/-): {100}% \n \
+          take_profit: {stop_order["take_profit"]/2}  | |  stop_loss: {0}  | |  expired: {stop_order["expired"]/2}\n")
+        except:
+          print(f"\
+          Параметры: acc={accuracy}, sl={stop_loss}, tp={take_profit} \n \
+          Итоговый баланс: {profile.tail(1)["balance"].values[0]} \n \
+          Обернуто в сделках: {round((profile.head(1)["balance"].values[0] - profile["balance"].min()), 2)} \n \
+          Рост обернутого: {"+" if delta_money > 0 else ""}{delta_money}% \n \
+          Всего сделок: {np.floor(profile[profile["is_closed"] == 1]["is_closed"].count() / 2)} \n ")
 
+  profile.to_csv('out.csv', index=False)
   if (debug):
-    profile.to_csv('out.csv', index=False)
+    # profile.to_csv('out.csv', index=False)
     print(tabulate(profile.head(10), headers='keys', tablefmt='psql'))
     print(profile["is_closed"].value_counts())
     print(profile["result"].value_counts().sort_index())

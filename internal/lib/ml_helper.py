@@ -13,7 +13,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import BaggingClassifier, RandomForestClassifier
-from sklearn.multiclass import OneVsRestClassifier
+from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import GridSearchCV, cross_val_score
 
@@ -45,7 +45,7 @@ def prepare_data(df_param, df_pred):  # Подготовка набора дан
 
   # Разделение данных на обучающий и тестовый наборы
   X_train, X_test, y_train, y_test = train_test_split(
-      X, y, test_size=0.2, random_state=17)
+      X, y, test_size=0.3, random_state=17)
 
   # # Масштабирование данных
   # scaler = StandardScaler()
