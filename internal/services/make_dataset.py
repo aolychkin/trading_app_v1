@@ -19,44 +19,30 @@ import internal.lib.ml_helper as mlrhelp
 
 
 if __name__ == '__main__':
-  # Загрузка данных
-  cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
-  df_param = pd.read_sql_query(
-      "SELECT * from params", cnx)
-  df_param.drop(columns=["id", "candle_id"], inplace=True)
+  mlrhelp.get_data()
 
-  df_pred = pd.read_sql_query(
-      "SELECT * from predictions", cnx)
-  df_pred.drop(columns=["id", "candle_id"], inplace=True)
+#   # Подготовка данных
+#   X_train, X_test, y_train, y_test = mlrhelp.prepare_data(df_param, df_pred)
 
-  df = df_param
-  df["pred"] = df_pred["high_10min"]
-  df = df.groupby("pred").head(13300)
+#   # Создание и обучение модели SVC
+#   model = mlrhelp.create_model_SVC("fast", X_train, y_train)
 
-  df_param = df.drop(columns=["pred"])
-  df_pred = df["pred"]
+#   # # Создание и обучение модели дерева решений
+#   # model = mlrhelp.create_model_TREE("", X_train, y_train)
 
-  # Подготовка данных
-  X_train, X_test, y_train, y_test = mlrhelp.prepare_data(df_param, df_pred)
+#   # Оценка производительности модели
+#   mlrhelp.model_score(model, X_test, y_test)
 
-  # Создание и обучение модели SVC
-  model = mlrhelp.create_model_SVC("fast", X_train, y_train)
+#   # Сохранение модели
+#   joblib.dump(model, "./model/model_10m_v7.pkl")  # 0.58
 
-  # # Создание и обучение модели дерева решений
-  # model = mlrhelp.create_model_TREE("", X_train, y_train)
+# ____ DRAFT ____
+# Загрузка модели потом
+# clf2 = joblib.load("model.pkl")
+# clf2.predict(X[0:1])
 
-  # Оценка производительности модели
-  mlrhelp.model_score(model, X_test, y_test)
+# print(tabulate(df_param.loc[:10], headers='keys', tablefmt='psql'))
+# print(df_pred.loc[:10])
+# print(tabulate(df.loc[:10], headers='keys', tablefmt='psql'))
 
-  # Сохранение модели
-  joblib.dump(model, "./model/model_10m_v3.pkl")  # 0.58
-
-  # Загрузка модели потом
-  # clf2 = joblib.load("model.pkl")
-  # clf2.predict(X[0:1])
-
-  # print(tabulate(df_param.loc[:10], headers='keys', tablefmt='psql'))
-  # print(df_pred.loc[:10])
-  # print(tabulate(df.loc[:10], headers='keys', tablefmt='psql'))
-
-  # print(df["pred"].value_counts())
+# print(df["pred"].value_counts())

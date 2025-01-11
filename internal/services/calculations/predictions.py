@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-import internal.lib.predictions_helper as prhelp
+import internal.lib.calculations.predictions_helper as prhelp
 import internal.domain.models as models
 
 if __name__ == '__main__':

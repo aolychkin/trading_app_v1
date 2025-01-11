@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-import internal.lib.indicators_helper as ihelp
+import internal.lib.calculations.indicators_helper as ihelp
 import internal.domain.models as models
 
 if __name__ == '__main__':
@@ -30,17 +30,27 @@ if __name__ == '__main__':
 
           MACD10_C=(ind.MACD10_signal/ind.MACD12_24)-1,
           MACD10_P=(ind_p.MACD10_signal/ind_p.MACD12_24)-1,
-          сEMA24_C=(ind.close - ind.EMA24) - 1,
-          сEMA24_P=(ind_p.close - ind_p.EMA24) - 1,
-          RSI9_C=(ind.RSI9/50)-1,
-          RSI9_P=(ind_p.RSI9/50)-1,
-          ADX9_C=(ind.ADX9/50)-1,
-          ADX9_P=(ind_p.ADX9/50)-1,
+          сEMA24_C=(ind.close / ind.EMA24) - 1,
+          сEMA24_P=(ind_p.close / ind_p.EMA24) - 1,
+          cEMA_100_C=(ind.close / ind.EMA100) - 1,
+          cEMA_100_P=(ind_p.close / ind_p.EMA100) - 1,
+          cEMA_200_C=(ind.close / ind.EMA200) - 1,
+          cEMA_200_P=(ind_p.close / ind_p.EMA100) - 1,
+          RSI9_C=ind.RSI9,
+          RSI9_P=ind_p.RSI9,
+          ADX9_C=ind.ADX9,
+          ADX9_P=ind_p.ADX9,
           DI9_C=(ind.ADX9_pos/ind.ADX9_neg)-1,
           DI9_P=(ind_p.ADX9_pos/ind_p.ADX9_neg)-1,
 
-          s_vol_C=(ind.volume / (ind.max_volume / 2))-1,
-          d_vol_CP=(ind.volume / ind_p.volume / (ind.md_volume/2))-1,
+          vEMA24_C=(ind.volume / ind.EMA24) - 1,
+          vEMA24_P=(ind_p.volume / ind_p.EMA24) - 1,
+          vEMA100_C=(ind.volume / ind.EMA100) - 1,
+          vEMA100_P=(ind_p.volume / ind_p.EMA100) - 1,
+          vEMA200_C=(ind.volume / ind.EMA200) - 1,
+          vEMA200_P=(ind_p.volume / ind_p.EMA200) - 1,
+          s_vol_C=(ind.volume / ind.max_volume)-1,
+          d_vol_CP=(ind.volume / ind_p.volume / ind.md_volume)-1,
       )
 
       if ind.id == 51:

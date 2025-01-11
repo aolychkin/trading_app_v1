@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-import internal.lib.indicators_helper as ihelp
+import internal.lib.calculations.indicators_helper as ihelp
 import internal.domain.models as models
 
 if __name__ == '__main__':
@@ -38,10 +38,15 @@ if __name__ == '__main__':
           ADX9_pos=df.loc[candle.id]["ADX9_pos"],
           ADX9_neg=df.loc[candle.id]["ADX9_neg"],
           EMA24=df.loc[candle.id]["EMA24"],
+          EMA100=df.loc[candle.id]["EMA100"],
+          EMA200=df.loc[candle.id]["EMA200"],
           MACD10_signal=df.loc[candle.id]["MACD10_signal"],
           MACD12_24=df.loc[candle.id]["MACD12_24"],
           RSI9=df.loc[candle.id]["RSI9"],
 
+          EMA24_volume=df.loc[candle.id]["EMA24_volume"],
+          EMA100_volume=df.loc[candle.id]["EMA100_volume"],
+          EMA200_volume=df.loc[candle.id]["EMA200_volume"],
           max_volume=max_volume,
           volume=candle.volume,
           md_volume=max_md_volume,

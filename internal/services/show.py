@@ -16,10 +16,10 @@ if __name__ == '__main__':
   # Загрузка данных
   df_model, X = shelp.get_data()
 
-  model = joblib.load("./model/model_10m_v3.pkl")
+  model = joblib.load("./model/model_10m_v4.pkl")
 
   for index, x in enumerate(X):
-    df_model.loc[index, ["minus", "p_0.2", "p_0.5"]] = (
+    df_model.loc[index, ["minus", "target"]] = (
         model.predict_proba(x.reshape(1, -1))).ravel()
   # print(tabulate(df_model.head(), headers='keys', tablefmt='psql'))
 

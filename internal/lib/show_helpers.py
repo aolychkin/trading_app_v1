@@ -20,14 +20,14 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
 
-import internal.lib.predictions_helper as prhelp
+import internal.lib.calculations.predictions_helper as prhelp
 import internal.domain.models as models
 
 
 def get_data():
   cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
   df = pd.read_sql_query(
-      "SELECT * from candles where time >= '2024-09-20 07:01:00.000' and time <= '2024-09-20 15:30:00.00'", cnx)
+      "SELECT * from candles where time >= '2024-12-20 07:01:00.000' and time <= '2024-12-20 15:30:00.00'", cnx)
   # "SELECT * from candles where time >= '2024-12-20 07:01:00.000' and time <= '2024-12-20 15:30:00.00'", cnx)
   # "SELECT * from candles where time >= '2024-12-18 07:01:00.000' and time <= '2024-12-18 15:30:00.00'", cnx)
 
@@ -90,7 +90,7 @@ def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
 
   for index, row in tqdm(data.iterrows()):
     # Сигнал на покупку акции
-    if (row["p_0.5"] >= accuracy) and (profile[profile["is_closed"] == 0]["is_closed"].count() < 4):
+    if (row["target"] >= accuracy) and (profile[profile["is_closed"] == 0]["is_closed"].count() < 4):
       transaction_id += 1
       buy = round(row['close'] * (1+0.0004), 2)  # TODO: увеличить точность. Price без комиссии
       balance = round(profile.loc[indx, "balance"], 2)
@@ -101,7 +101,7 @@ def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
       profile.loc[indx, "candle_id"] = row["id"]
       profile.loc[indx, "price"] = buy
       profile.loc[indx, "is_closed"] = 0
-      profile.loc[indx, "accuracy"] = row["p_0.5"]
+      profile.loc[indx, "accuracy"] = row["target"]
 
     for index, p_row in profile.iterrows():
       if (0 < row["id"] - p_row["candle_id"] <= wait) and (p_row["is_closed"] == 0):

@@ -18,6 +18,26 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import GridSearchCV, cross_val_score
 
 
+def get_data():  # Загрузка данных
+  cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
+  df_param = pd.read_sql_query(
+      "SELECT * from params_normal", cnx)
+  df_param.drop(columns=["id", "candle_id"], inplace=True)
+
+  df_pred = pd.read_sql_query(
+      "SELECT * from predictions", cnx)
+  df_pred.drop(columns=["id", "candle_id"], inplace=True)
+
+  pd.merge(df_param, df_pred, on='candle_id')
+
+  df = df_param
+  df["pred"] = df_pred["high_10min"]
+  df = df.groupby("pred").head(6300)
+
+  df_param = df.drop(columns=["pred"])
+  df_pred = df["pred"]
+
+
 def prepare_data(df_param, df_pred):  # Подготовка набора данных
   # Преобразование Pandas в numpy.ndarray
   X = df_param.to_numpy()
@@ -67,7 +87,7 @@ def model_score(model, X_test, y_test):  # Оценка производител
   y_pred = model.predict(X_test)
 
   # Оценка производительности модели
-  target_names = ['class 0', 'class 1', 'class 2']
+  target_names = ['class -1', 'class 0', 'class 1', 'class 2', 'class 3']
   accuracy = accuracy_score(y_test, y_pred)
   report = classification_report(y_test, y_pred, target_names=target_names)
 
