@@ -18,30 +18,6 @@ s_main = datetime(2024, 12, 2, 7, 00).strftime("%H:%M")
 f_main = datetime(2024, 12, 2, 15, 30).strftime("%H:%M")
 # TODO: понять, что делать с последними 10 минутами графика, которые я могу предсказать, но не могу использовать
 # В 15:40 начинается снятие заявок
-# 1–2 января, 7 января, 23 февраля, 8 марта, 1 мая, 9 мая, 12 июня, 4 ноября 2024 года
-s_h1 = datetime(2024, 1, 1, 2, 00)
-f_h1 = datetime(2024, 1, 3, 23, 59)
-
-s_h2 = datetime(2024, 1, 6, 2, 00)
-f_h2 = datetime(2024, 1, 8, 23, 59)
-
-s_h3 = datetime(2024, 2, 22, 2, 00)
-f_h3 = datetime(2024, 3, 24, 23, 59)
-
-s_h4 = datetime(2024, 3, 7, 2, 00)
-f_h4 = datetime(2024, 3, 9, 23, 59)
-
-s_h5 = datetime(2024, 5, 1, 2, 00)
-f_h5 = datetime(2024, 5, 2, 23, 59)
-
-s_h6 = datetime(2024, 5, 8, 2, 00)
-f_h6 = datetime(2024, 5, 10, 23, 59)
-
-s_h7 = datetime(2024, 6, 11, 2, 00)
-f_h7 = datetime(2024, 6, 13, 23, 59)
-
-s_h8 = datetime(2024, 11, 3, 2, 00)
-f_h8 = datetime(2024, 11, 5, 23, 59)
 
 # Дополнительная торговая сессия: 16:00 – 20:50 utc.
 s_evening = datetime(2024, 12, 1, 16, 00).strftime("%H:%M")
@@ -50,6 +26,31 @@ f_evening = datetime(2024, 12, 3, 20, 50).strftime("%H:%M")
 
 def w_session(candle_time, day):
   weekday = day.isoweekday()
+  # 1–2 января, 7 января, 23 февраля, 8 марта, 1 мая, 9 мая, 12 июня, 4 ноября 2024 года
+  s_h1 = datetime(day.year, 1, 1, 2, 00)
+  f_h1 = datetime(day.year, 1, 3, 23, 59)
+
+  s_h2 = datetime(day.year, 1, 6, 2, 00)
+  f_h2 = datetime(day.year, 1, 8, 23, 59)
+
+  s_h3 = datetime(day.year, 2, 22, 2, 00)
+  f_h3 = datetime(day.year, 3, 24, 23, 59)
+
+  s_h4 = datetime(day.year, 3, 7, 2, 00)
+  f_h4 = datetime(day.year, 3, 9, 23, 59)
+
+  s_h5 = datetime(day.year, 5, 1, 2, 00)
+  f_h5 = datetime(day.year, 5, 2, 23, 59)
+
+  s_h6 = datetime(day.year, 5, 8, 2, 00)
+  f_h6 = datetime(day.year, 5, 10, 23, 59)
+
+  s_h7 = datetime(day.year, 6, 11, 2, 00)
+  f_h7 = datetime(day.year, 6, 13, 23, 59)
+
+  s_h8 = datetime(day.year, 11, 3, 2, 00)
+  f_h8 = datetime(day.year, 11, 5, 23, 59)
+
   # В какую торговую сессию торгуется свеча (what)
   if (weekday == 7) or (weekday == 6):
     return 3
@@ -83,7 +84,7 @@ def w_s_min(candle_time):
 
 
 def ta_ind():
-  cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
+  cnx = sqlite3.connect('./storage/sqlite/shares.db')
   df = pd.read_sql_query(
       "SELECT open, high, low, close, volume FROM candles", cnx)
   df["md_volume"] = df["volume"].diff(
@@ -105,9 +106,9 @@ def ta_ind():
   df["EMA24"] = EMAIndicator(
       close=df["close"], window=24, fillna=True).ema_indicator()
   df["EMA100"] = EMAIndicator(
-      close=df["close"], window=24, fillna=True).ema_indicator()
+      close=df["close"], window=100, fillna=True).ema_indicator()
   df["EMA200"] = EMAIndicator(
-      close=df["close"], window=24, fillna=True).ema_indicator()
+      close=df["close"], window=200, fillna=True).ema_indicator()
   print("EMA сохранен в df")
 
   df["MACD10_signal"] = ta_MACD.macd_signal()
@@ -120,12 +121,12 @@ def ta_ind():
   df["EMA24_volume"] = EMAIndicator(
       close=df["volume"], window=24, fillna=True).ema_indicator()
   df["EMA100_volume"] = EMAIndicator(
-      close=df["volume"], window=24, fillna=True).ema_indicator()
+      close=df["volume"], window=100, fillna=True).ema_indicator()
   df["EMA200_volume"] = EMAIndicator(
-      close=df["volume"], window=24, fillna=True).ema_indicator()
+      close=df["volume"], window=200, fillna=True).ema_indicator()
   print("EMA VOLUME сохранен в df")
 
   df.index += 1  # синхранизируем с id бд
   print(tabulate(df.loc[235765:235780], headers='keys', tablefmt='psql'))
 
-  return round(np.quantile(df["volume"].values, 0.9999), 4), df["md_volume"].quantile(0.999), df
+  return round(np.quantile(df["volume"].values, 0.9999), 4), df["md_volume"].quantile(0.9999), df

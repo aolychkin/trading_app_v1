@@ -21,7 +21,7 @@ from adjdatatools.preprocessing import AdjustedScaler
 
 def prepare_data(scaler="abs", debug=True):  # Подготовка набора данных
   # Загрузка данных
-  cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
+  cnx = sqlite3.connect('./storage/sqlite/shares.db')
   df_param = pd.read_sql_query(
       "SELECT * from params", cnx)
   df_param.drop(columns=["id"], inplace=True)  # "candle_id"

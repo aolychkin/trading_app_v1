@@ -25,11 +25,9 @@ import internal.domain.models as models
 
 
 def get_data():
-  cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
+  cnx = sqlite3.connect('./storage/sqlite/shares.db')
   df = pd.read_sql_query(
       "SELECT * from candles where time >= '2024-12-20 07:01:00.000' and time <= '2024-12-20 15:30:00.00'", cnx)
-  # "SELECT * from candles where time >= '2024-12-20 07:01:00.000' and time <= '2024-12-20 15:30:00.00'", cnx)
-  # "SELECT * from candles where time >= '2024-12-18 07:01:00.000' and time <= '2024-12-18 15:30:00.00'", cnx)
 
   max_id = df["id"].max()
   min_id = df["id"].min()
@@ -54,7 +52,7 @@ def get_data():
 
 
 def fit_data():
-  cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
+  cnx = sqlite3.connect('./storage/sqlite/shares.db')
   scaler = StandardScaler()
   df_param = pd.read_sql_query(
       "SELECT * from params", cnx)
@@ -84,7 +82,6 @@ def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
   p_count = 0
   count = 0
 
-  # TODO: Если больше N открытых сделок - больше не открываю
   # TODO: Подкрепить показателями теми же самыми за период в 10 минут для каждой свечи минутной внутри (более длинный тренд)
   # TODO: Обучение норм, нужно работать с данными
 

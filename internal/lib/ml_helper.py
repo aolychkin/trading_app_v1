@@ -19,23 +19,23 @@ from sklearn.model_selection import GridSearchCV, cross_val_score
 
 
 def get_data():  # Загрузка данных
-  cnx = sqlite3.connect('./storage/sqlite/shares.db')  # TODO: close context
+  cnx = sqlite3.connect('./storage/sqlite/shares.db')
   df_param = pd.read_sql_query(
       "SELECT * from params_normal", cnx)
-  df_param.drop(columns=["id", "candle_id"], inplace=True)
+  df_param.drop(columns=["id"], inplace=True)
 
   df_pred = pd.read_sql_query(
       "SELECT * from predictions", cnx)
-  df_pred.drop(columns=["id", "candle_id"], inplace=True)
+  df_pred.drop(columns=["id"], inplace=True)
 
-  pd.merge(df_param, df_pred, on='candle_id')
+  df = pd.merge(df_param, df_pred, on='candle_id')
+  df.drop(columns=["candle_id"], inplace=True)
+  df = df.groupby("high_10min").head(df["high_10min"].value_counts().values[-1])
 
-  df = df_param
-  df["pred"] = df_pred["high_10min"]
-  df = df.groupby("pred").head(6300)
+  df_param = df[df.columns.values[:-1]]
+  df_pred = df[df.columns.values[-1]]
 
-  df_param = df.drop(columns=["pred"])
-  df_pred = df["pred"]
+  return df_param, df_pred
 
 
 def prepare_data(df_param, df_pred):  # Подготовка набора данных
@@ -45,14 +45,14 @@ def prepare_data(df_param, df_pred):  # Подготовка набора дан
 
   # Разделение данных на обучающий и тестовый наборы
   X_train, X_test, y_train, y_test = train_test_split(
-      X, y, test_size=0.2, random_state=42)
+      X, y, test_size=0.2, random_state=17)
 
-  # Масштабирование данных
-  scaler = StandardScaler()
-  X_train = scaler.fit_transform(X_train)
-  X_test = scaler.transform(X_test)
+  # # Масштабирование данных
+  # scaler = StandardScaler()
+  # X_train = scaler.fit_transform(X_train)
+  # X_test = scaler.transform(X_test)
 
-  print("[УСПЕШНО] Данные успешно подготовлены")
+  print("[УСПЕШНО] Нормализованные данные успешно подготовлены")
 
   return X_train, X_test, y_train, y_test
 
@@ -63,19 +63,19 @@ def create_model_SVC(type: str, X_train, y_train):  # Создание моде�
     #  class_weight="balanced"
     n_estimators = 10
     model = OneVsRestClassifier(BaggingClassifier(
-        SVC(kernel='rbf', C=1000.0, random_state=42, verbose=1), max_samples=1.0 / n_estimators, n_estimators=n_estimators, random_state=42))
+        SVC(kernel='rbf', C=1000.0, random_state=17, verbose=1), max_samples=1.0 / n_estimators, n_estimators=n_estimators, random_state=17))
     model.fit(X_train, y_train)  # Обучение модели
     return model
   elif type == "detect":
     # Если нужно определить наилучшее ядро
-    model = SVC(random_state=42, verbose=1)
+    model = SVC(random_state=17, verbose=1)
     param_grid = {'C': [0.1, 1, 10, 100], 'kernel': ['linear', 'rbf']}
     grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5)
     grid_search.fit(X_train, y_train)  # Поиск лучших параметров модели
     print("Лучшие параметры: {}".format(grid_search.best_params_))
     return grid_search
   else:
-    model = SVC(kernel='rbf', C=100, random_state=42, verbose=1)
+    model = SVC(kernel='rbf', C=100, random_state=17, verbose=1)
     model.fit(X_train, y_train)  # Обучение модели
     return model
 

@@ -35,7 +35,7 @@ if __name__ == '__main__':
           cEMA_100_C=(ind.close / ind.EMA100) - 1,
           cEMA_100_P=(ind_p.close / ind_p.EMA100) - 1,
           cEMA_200_C=(ind.close / ind.EMA200) - 1,
-          cEMA_200_P=(ind_p.close / ind_p.EMA100) - 1,
+          cEMA_200_P=(ind_p.close / ind_p.EMA200) - 1,
           RSI9_C=ind.RSI9,
           RSI9_P=ind_p.RSI9,
           ADX9_C=ind.ADX9,

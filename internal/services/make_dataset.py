@@ -19,22 +19,22 @@ import internal.lib.ml_helper as mlrhelp
 
 
 if __name__ == '__main__':
-  mlrhelp.get_data()
+  df_param, df_pred = mlrhelp.get_data()
 
-#   # Подготовка данных
-#   X_train, X_test, y_train, y_test = mlrhelp.prepare_data(df_param, df_pred)
+  # Подготовка данных
+  X_train, X_test, y_train, y_test = mlrhelp.prepare_data(df_param, df_pred)
 
-#   # Создание и обучение модели SVC
-#   model = mlrhelp.create_model_SVC("fast", X_train, y_train)
+  # Создание и обучение модели SVC
+  model = mlrhelp.create_model_SVC("fast", X_train, y_train)
 
-#   # # Создание и обучение модели дерева решений
-#   # model = mlrhelp.create_model_TREE("", X_train, y_train)
+  # # Создание и обучение модели дерева решений
+  # model = mlrhelp.create_model_TREE("", X_train, y_train)
 
-#   # Оценка производительности модели
-#   mlrhelp.model_score(model, X_test, y_test)
+  # Оценка производительности модели
+  mlrhelp.model_score(model, X_test, y_test)
 
-#   # Сохранение модели
-#   joblib.dump(model, "./model/model_10m_v7.pkl")  # 0.58
+  # Сохранение модели
+  joblib.dump(model, "./model/model_10m_v11.pkl")  # 0.58 # 0.45
 
 # ____ DRAFT ____
 # Загрузка модели потом
