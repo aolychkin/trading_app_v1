@@ -67,7 +67,7 @@ def fit_data():
   return scaler
 
 
-def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
+def strategy(data, accuracy, stop_loss, take_profit, max_accuracy=1, wait=10, debug=False):
   np.seterr(divide='ignore', invalid='ignore')
   indx = 0
   profile = pd.DataFrame()
@@ -91,7 +91,7 @@ def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
 
   for index, row in tqdm(data.iterrows()):
     # Сигнал на покупку акции
-    if (row["target"] >= accuracy) and (profile[profile["is_closed"] == 0]["is_closed"].count() < 5):
+    if (accuracy <= row["target"] <= max_accuracy) and (profile[profile["is_closed"] == 0]["is_closed"].count() < 5):
       transaction_id += 1
       buy = round(row['close'] * (1+0.0004), 2)  # TODO: увеличить точность. Price без комиссии
       balance = round(profile.loc[indx, "balance"], 2)
@@ -108,7 +108,7 @@ def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
       if (0 < row["id"] - p_row["candle_id"] <= wait) and (p_row["is_closed"] == 0):
         if (row["high"]/p_row["price"] - 1 >= take_profit):
           indx += 1
-          sell = round(row['high'] * (1-0.0004), 2)
+          sell = round(p_row['price'] * (1-0.0004+take_profit), 2)
           profile.loc[indx, "id"] = p_row["id"]
           profile.loc[indx, "transaction"] = sell
           profile.loc[indx, "balance"] = round(profile.loc[indx-1, "balance"]+sell, 2)
@@ -121,7 +121,7 @@ def strategy(data, accuracy, stop_loss, take_profit, wait=10, debug=False):
           profile.loc[index, "result"] = "+"
         elif (row["low"]/p_row["price"] - 1 <= -stop_loss):
           indx += 1
-          sell = round(row['low'] * (1+0.0004), 2)
+          sell = round(p_row['price'] * (1-0.0004-stop_loss), 2)
           profile.loc[indx, "id"] = p_row["id"]
           profile.loc[indx, "transaction"] = sell
           profile.loc[indx, "balance"] = round(profile.loc[indx-1, "balance"]+sell, 2)
