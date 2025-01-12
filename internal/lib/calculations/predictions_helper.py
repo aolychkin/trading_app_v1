@@ -10,18 +10,21 @@ from ta.momentum import RSIIndicator
 
 
 def condition(x):
-  if 0.005 < x <= 1:
-    return 3
-  elif 0.002 < x <= 0.005:
-    return 2
-  elif 0 < x < 0.002:
-    return 1
-  elif x == 0:
-    return 0
-  elif x < 0:
-    return -1
-  else:
-    return -2
+  if 0.003 <= x:
+    return 1  # 134419
+  elif x < 0.003:
+    return 0  # 311213
+
+  # if 0.006 < x <= 1:
+  #   return 3  # (0.005) 42236 -> 33078
+  # elif 0.002 < x <= 0.006:
+  #   return 2  # 92183 -> 101341
+  # elif 0 < x < 0.002:
+  #   return 1  # 187326
+  # elif x <= 0:
+  #   return 0  # 10953 + 112934 = 123887
+  # else:
+  #   return -2
 
   # 3    63686
   # 0    58655

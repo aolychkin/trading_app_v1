@@ -26,7 +26,7 @@ def prepare_data(scaler="abs", debug=True):  # Подготовка набора
       "SELECT * from params", cnx)
   df_param.drop(columns=["id"], inplace=True)  # "candle_id"
 
-  cols = df_param.columns.values[3:]
+  cols = df_param.columns.values[1:]
   Q1 = df_param[cols].quantile(0.05)
   Q3 = df_param[cols].quantile(0.95)
   IQR = Q3 - Q1
@@ -40,17 +40,16 @@ def prepare_data(scaler="abs", debug=True):  # Подготовка набора
     scaler = StandardScaler()
   else:
     scaler = MaxAbsScaler()
-  cols = df_param.columns.values[1:]
   x_scaled = scaler.fit_transform(df_param[cols].to_numpy())
-  df = pd.DataFrame(data=x_scaled.reshape(df_param["co_C"].count(), -1), columns=df_param[cols].columns)
+  df = pd.DataFrame(data=x_scaled.reshape(df_param["MACD10"].count(), -1), columns=df_param[cols].columns)
   df.insert(loc=0, column='candle_id', value=df_param[df_param.columns.values[0:1]].values)
   # print(df_param[df_param.columns.values[:1]].count())
   # print(df[df_param.columns.values[:1]].count())
 
   if debug:
     print(tabulate(df.iloc[:6, :8], headers='keys', tablefmt='psql'))
-    print(df["co_C"].max())
-    print(df["MACD10_C"].max())
+    print(df["MACD10"].min())
+    print(df["MACD10"].max())
 
   # print(df["candle_id"].count())
   # print(df["co_C"].count())

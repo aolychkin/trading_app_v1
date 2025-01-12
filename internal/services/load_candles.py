@@ -20,7 +20,8 @@ if __name__ == '__main__':
   engine = create_engine('sqlite:///storage/sqlite/shares.db')
   with Session(engine) as session:
     with Client(TOKEN, target=INVEST_GRPC_API_SANDBOX) as client:
-      for year in [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]:
+      # for year in [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]:
+      for year in [2023, 2024]:
         print(f"Start to getting year: {year}")
         for index, month in tqdm(enumerate(range(1, 13))):
           for day in tqdm(range(monthrange(year, month)[1])):

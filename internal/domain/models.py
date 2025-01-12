@@ -29,13 +29,8 @@ class Indicators(Base):
   __tablename__ = 'indicators'
   id = Column(Integer(), primary_key=True)
   candle_id = Column(Integer(), ForeignKey('candles.id'))
-
-  weekday = Column(Integer(), nullable=False)
   session = Column(Integer(), nullable=False)
-  session_len = Column(Integer(), nullable=False)  # константа
-  s_min = Column(Integer(), nullable=False)
 
-  open = Column(Float(), nullable=False)
   high = Column(Float(), nullable=False)
   low = Column(Float(), nullable=False)
   close = Column(Float(), nullable=False)
@@ -43,18 +38,12 @@ class Indicators(Base):
   ADX9_pos = Column(Float(), nullable=False)
   ADX9_neg = Column(Float(), nullable=False)
   EMA24 = Column(Float(), nullable=False)
-  EMA100 = Column(Float(), nullable=False)
-  EMA200 = Column(Float(), nullable=False)
   MACD10_signal = Column(Float(), nullable=False)
   MACD12_24 = Column(Float(), nullable=False)
   RSI9 = Column(Float(), nullable=False)
 
   EMA24_volume = Column(Float(), nullable=False)
-  EMA100_volume = Column(Float(), nullable=False)
-  EMA200_volume = Column(Float(), nullable=False)
-  max_volume = Column(Integer(), nullable=False, default=0)  # константа
   volume = Column(Float(), nullable=False)
-  md_volume = Column(Float(), nullable=False)  # константа
 
 
 class Params(Base):
@@ -62,36 +51,16 @@ class Params(Base):
   id = Column(Integer(), primary_key=True)
   candle_id = Column(Integer(), ForeignKey('candles.id'))
 
-  wday_C = Column(Float(), nullable=False)
-  s_min_C = Column(Float(), nullable=False)
-
-  co_C = Column(Float(), nullable=False)
   hl_C = Column(Float(), nullable=False)
-  hc_CP = Column(Float(), nullable=False)
 
-  MACD10_P = Column(Float(), nullable=False)
-  MACD10_C = Column(Float(), nullable=False)
-  сEMA24_C = Column(Float(), nullable=False)
-  сEMA24_P = Column(Float(), nullable=False)
-  cEMA_100_C = Column(Float(), nullable=False)
-  cEMA_100_P = Column(Float(), nullable=False)
-  cEMA_200_C = Column(Float(), nullable=False)
-  cEMA_200_P = Column(Float(), nullable=False)
-  RSI9_C = Column(Float(), nullable=False)
-  RSI9_P = Column(Float(), nullable=False)
-  ADX9_C = Column(Float(), nullable=False)
-  ADX9_P = Column(Float(), nullable=False)
-  DI9_C = Column(Float(), nullable=False)
-  DI9_P = Column(Float(), nullable=False)
+  MACD10 = Column(Float(), nullable=False)  # Из гугл таблицы: пересечение и сила
+  сEMA24 = Column(Float(), nullable=False)  # Просто Close выше или ниже EMA24
+  RSI9 = Column(Float(), nullable=False)  # Сигналом является только: Выход из "зоны" комфорта
+  ADX9 = Column(Float(), nullable=False)  # Растущий и высокий тренд (больше 25 и чем больше - тем лучше) = подтверждение продажи и покупки. "Для ADX все что не рост - все слабость тренда"
+  DI9 = Column(Float(), nullable=False)
 
-  vEMA24_C = Column(Float(), nullable=False)
-  vEMA24_P = Column(Float(), nullable=False)
-  vEMA100_C = Column(Float(), nullable=False)
-  vEMA100_P = Column(Float(), nullable=False)
-  vEMA200_C = Column(Float(), nullable=False)
-  vEMA200_P = Column(Float(), nullable=False)
-  s_vol_C = Column(Float(), nullable=False)
-  d_vol_CP = Column(Float(), nullable=False)
+  vEMA24 = Column(Float(), nullable=False)
+  # middle_vol = Column(Float(), nullable=False)
 
 
 class Params_normal(Base):
@@ -99,36 +68,15 @@ class Params_normal(Base):
   id = Column(Integer(), primary_key=True)
   candle_id = Column(Integer(), ForeignKey('candles.id'))
 
-  wday_C = Column(Float(), nullable=False)
-  s_min_C = Column(Float(), nullable=False)
-
-  co_C = Column(Float(), nullable=False)
   hl_C = Column(Float(), nullable=False)
-  hc_CP = Column(Float(), nullable=False)
 
-  MACD10_P = Column(Float(), nullable=False)
-  MACD10_C = Column(Float(), nullable=False)
-  сEMA24_C = Column(Float(), nullable=False)
-  сEMA24_P = Column(Float(), nullable=False)
-  cEMA_100_C = Column(Float(), nullable=False)
-  cEMA_100_P = Column(Float(), nullable=False)
-  cEMA_200_C = Column(Float(), nullable=False)
-  cEMA_200_P = Column(Float(), nullable=False)
-  RSI9_C = Column(Float(), nullable=False)
-  RSI9_P = Column(Float(), nullable=False)
-  ADX9_C = Column(Float(), nullable=False)
-  ADX9_P = Column(Float(), nullable=False)
-  DI9_C = Column(Float(), nullable=False)
-  DI9_P = Column(Float(), nullable=False)
+  MACD10 = Column(Float(), nullable=False)  # Из гугл таблицы: пересечение и сила
+  сEMA24 = Column(Float(), nullable=False)  # Просто Close выше или ниже EMA24
+  RSI9 = Column(Float(), nullable=False)  # Сигналом является только: Выход из "зоны" комфорта
+  ADX9 = Column(Float(), nullable=False)  # Растущий и высокий тренд (больше 25 и чем больше - тем лучше) = подтверждение продажи и покупки. "Для ADX все что не рост - все слабость тренда"
+  DI9 = Column(Float(), nullable=False)
 
-  vEMA24_C = Column(Float(), nullable=False)
-  vEMA24_P = Column(Float(), nullable=False)
-  vEMA100_C = Column(Float(), nullable=False)
-  vEMA100_P = Column(Float(), nullable=False)
-  vEMA200_C = Column(Float(), nullable=False)
-  vEMA200_P = Column(Float(), nullable=False)
-  s_vol_C = Column(Float(), nullable=False)
-  d_vol_CP = Column(Float(), nullable=False)
+  vEMA24 = Column(Float(), nullable=False)
 
 
 class Predictions(Base):

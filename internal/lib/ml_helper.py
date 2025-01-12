@@ -87,7 +87,8 @@ def model_score(model, X_test, y_test):  # Оценка производител
   y_pred = model.predict(X_test)
 
   # Оценка производительности модели
-  target_names = ['class -1', 'class 0', 'class 1', 'class 2', 'class 3']
+  target_names = ['class 0', 'class 1']
+  # target_names = ['class 0', 'class 1', 'class 2', 'class 3']
   accuracy = accuracy_score(y_test, y_pred)
   report = classification_report(y_test, y_pred, target_names=target_names)
 

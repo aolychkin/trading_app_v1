@@ -34,7 +34,7 @@ if __name__ == '__main__':
   mlrhelp.model_score(model, X_test, y_test)
 
   # Сохранение модели
-  joblib.dump(model, "./model_v2/model_1.pkl")  # 0.58 # 0.45
+  joblib.dump(model, "./model_v2/model_2.pkl")  # 0.58 # 0.45
 
 # ____ DRAFT ____
 # Загрузка модели потом
